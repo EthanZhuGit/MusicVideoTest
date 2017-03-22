@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">MyVideoPlayer</string>
+    <string translatable="false" name="durationformatshort">%2$d:%5$02d</string>
+    <string translatable="false" name="durationformatlong">%1$d:%3$02d:%5$02d</string>
+    <string translatable="false" name="default_time">"--:--"</string>
+    <string translatable="false" name="list_position">"%1$02d. "</string>
+    <string name="videoview_error_text_unknown">Sorry, this video cannot be played.</string>
+    <string name="VideoView_error_title">Cannot play video</string>
+    <string name="video_group_info">"%1$s Video Files %2$s"</string>
+    <string name="allVideos">"All Videos"</string>
+    <string name="video_error_auto_next">"(%1$d) Next"</string>
+
+    <!-- unused-->
+    <string name="scanning">Scanning...please wait</string>
+    <string name="loading_video">Loading video...</string>
+    <string name="tab_inand">Hard Disk</string>
+    <string name="storage_error_message">No video!</string>
+    <string name="storage_error_message_detail">The related media file not found!</string>
+    <string name="preview_playback">previewing</string>
+    <string name="videoview_error_text_invalid_progressive_playback">Sorry, this video is not valid for streaming to this device.</string>
+</resources>
