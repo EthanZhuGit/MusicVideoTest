@@ -27,16 +27,26 @@ public class VideoTabActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: ");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.video_main);
         mStoreManager = StoreManager.getInstance(this);
         mMediaStorageFragment.setMediaPlaybackFragment(mMediaPlaybackFragment);
+        mMediaStorageFragment.setMediaPlaylistFragment(mMediaPlaylistFragment);
         initViewPager();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+    }
+
 
 
     private void initViewPager() {
         mViewPager = (ViewPager) findViewById(R.id.id_viewpager);
+        mViewPager.addOnPageChangeListener(mPageChangeListener);
         fragmentList.add(mMediaStorageFragment);
         fragmentList.add(mMediaPlaybackFragment);
         fragmentList.add(mMediaPlaylistFragment);
@@ -64,21 +74,77 @@ public class VideoTabActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(0,true);
     }
 
+    public void play(int index) {
+        mMediaPlaybackFragment.play(index);
+    }
+
     public void switchToPage(int page) {
         mViewPager.setCurrentItem(page, true);
     }
 
 
     public void switchToPlay(Store store, ArrayList<Uri> fileUriList, boolean all) {
-//        if (all) {
-//            mStoreManager.putBoolean(StoreManager.KEY_ALL_VIDEO, true);
-//        } else {
-//            mStoreManager.putBoolean(StoreManager.KEY_ALL_VIDEO, false);
-//        }
         mViewPager.setCurrentItem(1, true);
-//        mMediaStorageFragment.setCurrentMediaStore(store);
-        //mMediaPlaybackFragment.registerPositionListener(mMediaPlaylistFragment.mPositionChangedListener);
-        //mMediaPlaylistFragment.setDataList(fileUriList);
+        mMediaPlaybackFragment.registerPositionListener(mMediaPlaylistFragment.mPositionChangedListener);
+        mMediaPlaylistFragment.setDataList(fileUriList);
         mMediaPlaybackFragment.listPlay(store, fileUriList);
+    }
+
+    /**
+     * Dispatch onPause() to fragments.
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
+    }
+
+    private ViewPager.OnPageChangeListener mPageChangeListener = new ViewPager.OnPageChangeListener() {
+
+        @Override
+        public void onPageSelected(int arg0) {
+            if (arg0 == 0) {
+                mMediaPlaybackFragment.setCurrentPage(0);
+                mMediaPlaybackFragment.pause();
+                quitFullScreen();
+            } else if (arg0 == 2) {
+                mMediaPlaybackFragment.setCurrentPage(2);
+                mMediaPlaybackFragment.showBars(mMediaPlaybackFragment.DEFAULT_TIMEOUT);
+            } else {
+                mMediaPlaybackFragment.setCurrentPage(1);
+                if (mMediaPlaybackFragment.isPlayingMode()){
+                    if (!mMediaPlaybackFragment.isMediaPlaying()){
+                        mMediaPlaybackFragment.resume();
+                    }
+                }
+                mMediaPlaybackFragment.showBars(mMediaPlaybackFragment.DEFAULT_TIMEOUT);
+            }
+        }
+
+        @Override
+        public void onPageScrolled(int arg0, float arg1, int arg2) {
+
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int arg0) {
+
+        }
+    };
+
+
+    public void enterFullScreen() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+    }
+
+    public void quitFullScreen() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 }

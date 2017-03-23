@@ -52,40 +52,35 @@
             android:gravity="center_horizontal"
             android:orientation="horizontal">
             <Button
-                android:id="@+id/img_full"
+                android:id="@+id/btn_full"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="not full"/>
             <Button
-                android:id="@+id/img_stop"
+                android:id="@+id/btn_stop"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="stop" />
             <Button
-                android:id="@+id/img_previous"
+                android:id="@+id/btn_previous"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="previous" />
             <Button
-                android:id="@+id/img_play"
+                android:id="@+id/btn_play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="Play"/>
             <Button
-                android:id="@+id/img_next"
+                android:id="@+id/btn_next"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="next"/>
-            <Button
-                android:id="@+id/img_dir"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical" />
         </LinearLayout>
     </LinearLayout>
 

@@ -20,7 +20,7 @@ public class MediaStorageFragment extends Fragment {
     private StoreManager mStoreManager;
     private Store mCurrentStore;
 
-    private MediaFragment mMediaFragmentHD, mMediaFragmentUSB, mMediaFragmentSD;
+    private MediaFragment mMediaFragment0, mMediaFragment1, mMediaFragment2;
     private RadioButton mRadioBtn0, mRadioBtn1, mRadioBtn2;
     private RadioGroup mRadioGroup;
     private MediaPlaybackFragment mPlayback;
@@ -140,84 +140,20 @@ public class MediaStorageFragment extends Fragment {
                 break;
             case 2:
                 mRadioBtn0.setVisibility(View.VISIBLE);
-//                mRadioBtn0.setChecked(true);
                 mRadioBtn1.setVisibility(View.VISIBLE);
                 mRadioBtn1.setText(stores.get(1).getDirectory().getPath());
                 mRadioBtn2.setVisibility(View.INVISIBLE);
-                    break;
+                break;
             case 3:
                 mRadioBtn0.setVisibility(View.VISIBLE);
-//                mRadioBtn0.setChecked(true);
                 mRadioBtn1.setVisibility(View.VISIBLE);
                 mRadioBtn1.setText(stores.get(1).getDirectory().getPath());
                 mRadioBtn2.setVisibility(View.VISIBLE);
                 mRadioBtn2.setText(stores.get(2).getDirectory().getPath());
                 break;
         }
-//        for (Store store: stores) {
-//            if (!store.mounted()) {
-//                MediaModel.getInstance().resetData(store);
-//                if (store.equals(mPlayback.getPlayingStore())) {
-//                    // eject current playing store. stop current playback
-//                    Log.d(TAG, "=stop current playback.");
-//                    VideoTabActivity activity = (VideoTabActivity)getActivity();
-//                    activity.switchToPage(0);
-//                    mPlayback.stop();
-//                    //mPlaylist.setDataList(null);
-//                    mPlayback.clearPlayList();
-//                }
-//
-//                if (store.equals(mCurrentStore)) {
-//                    if ((mStateRecord & STATE_FORGROUND) != 0) {
-//                        // eject current! switch to last tab.
-//                        Log.d(TAG, "=switch to last tab.");
-//                        for (Store s : stores) {
-//                            if (s.mounted()) {
-//                                setCurrentMediaStore(s);
-//                                break;
-//                            }
-//                        }
-//                    } else {
-//                        // background eject current store. finish it background;
-//                        Log.d(TAG, "=finish it background.");
-//                        getActivity().finish();
-//                    }
-//                }
-//            }
-//            switch (store.getStorageType()) {
-//                case Store.TYPE_HD:
-//                    mRadioBtn0.setVisibility(store.mounted() ? View.VISIBLE : View.GONE);
-//                    break;
-//                case Store.TYPE_SD:
-//                    mRadioBtn1.setVisibility(store.mounted() ? View.VISIBLE : View.GONE);
-//                    break;
-//                case Store.TYPE_USB:
-//                    mRadioBtn2.setVisibility(store.mounted() ? View.VISIBLE : View.GONE);
-//                    break;
-//            }
-//        }
     }
 
-    /**
-     * 将store的按键设为true
-     *
-     * @param
-     */
-    public void setCurrentMediaStore(Store store) {
-        mCurrentStore = store;
-        int i = mStoreManager.getStoreList().indexOf(store);
-        switch (i) {
-            case 0:
-                mRadioBtn0.setChecked(true);
-                break;
-            case 1:
-                mRadioBtn1.setChecked(true);
-                break;
-            case 2:
-                mRadioBtn2.setChecked(true);
-                break;
-        }
-    }
 
 
     /**
@@ -242,6 +178,7 @@ public class MediaStorageFragment extends Fragment {
                 VideoTabActivity activity = (VideoTabActivity) getActivity();
                 activity.switchToPage(0);
                 mPlayback.stop();
+                mPlaylist.setDataList(null);
             }
         }
     }
@@ -254,33 +191,33 @@ public class MediaStorageFragment extends Fragment {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
             switch (radioButtonId) {
                 case R.id.storage_0:
-                    Log.d(TAG, "===>>HD ");
+                    Log.d(TAG, "===>>0 ");
                     mCurrentStore = mStoreManager.getStoreList().get(0);
                     Log.d(TAG, "onCheckedChanged: " + mCurrentStore.getUri().toString());
-                    if (mMediaFragmentHD == null) {
-                        mMediaFragmentHD = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
+                    if (mMediaFragment0 == null) {
+                        mMediaFragment0 = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
                     }
 
-                    transaction.replace(R.id.container, mMediaFragmentHD);
+                    transaction.replace(R.id.container, mMediaFragment0);
                     transaction.commit();
                     break;
                 case R.id.storage_1:
-                    Log.d(TAG, "===>>USB ");
+                    Log.d(TAG, "===>>1 ");
                     mCurrentStore = mStoreManager.getStoreList().get(1);
-                    if (mMediaFragmentUSB == null) {
-                        mMediaFragmentUSB = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
+                    if (mMediaFragment1 == null) {
+                        mMediaFragment1 = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
                     }
 
-                    transaction.replace(R.id.container, mMediaFragmentUSB);
+                    transaction.replace(R.id.container, mMediaFragment1);
                     transaction.commit();
                     break;
                 case R.id.storage_2:
-                    Log.d(TAG, "===>>SD ");
+                    Log.d(TAG, "===>>2 ");
                     mCurrentStore = mStoreManager.getStoreList().get(2);
-                    if (mMediaFragmentSD == null) {
-                        mMediaFragmentSD = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
+                    if (mMediaFragment2 == null) {
+                        mMediaFragment2 = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
                     }
-                    transaction.replace(R.id.container, mMediaFragmentSD);
+                    transaction.replace(R.id.container, mMediaFragment2);
                     transaction.commit();
                     break;
                 default:

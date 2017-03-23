@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -70,6 +71,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
     private Store mStore;
 
     private Uri mUri;
+    private MediaPlaylistFragment.OnPositionChangedListener mPositionListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,12 +101,11 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
         mSeekBar = (SeekBar) view.findViewById(R.id.seekBar);
         mCurrentTime = (TextView) view.findViewById(R.id.tv_startTime);
         mTotalTime = (TextView) view.findViewById(R.id.tv_totalTime);
-        view.findViewById(R.id.img_previous).setOnClickListener(this);
-        view.findViewById(R.id.img_next).setOnClickListener(this);
-        view.findViewById(R.id.img_dir).setOnClickListener(this);
-        view.findViewById(R.id.img_stop).setOnClickListener(this);
-        mRatio = (Button) view.findViewById(R.id.img_full);
-        mPlayPause = (Button) view.findViewById(R.id.img_play);
+        view.findViewById(R.id.btn_previous).setOnClickListener(this);
+        view.findViewById(R.id.btn_next).setOnClickListener(this);
+        view.findViewById(R.id.btn_stop).setOnClickListener(this);
+        mRatio = (Button) view.findViewById(R.id.btn_full);
+        mPlayPause = (Button) view.findViewById(R.id.btn_play);
         mRatio.setOnClickListener(this);
         mPlayPause.setOnClickListener(this);
         mSeekBar.setOnSeekBarChangeListener(mSeekBarChanged);
@@ -172,7 +173,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
     public void onClick(View view) {
         showBars(DEFAULT_TIMEOUT);
         switch (view.getId()) {
-            case R.id.img_play:
+            case R.id.btn_play:
                 if (!isPlayingMode()) {
                     doPlay(0);
                 } else if (mVideoView.isPlaying()) {
@@ -181,7 +182,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
                     resume();
                 }
                 break;
-            case R.id.img_full:
+            case R.id.btn_full:
                 if (fullMode) {
                     mRatio.setText("full");
                 } else {
@@ -190,16 +191,14 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
                 fullMode=!fullMode;
                 mVideoView.setScreenFull(fullMode);
                 break;
-            case R.id.img_stop:
+            case R.id.btn_stop:
                 stop();
                 break;
-            case R.id.img_previous:
+            case R.id.btn_previous:
                 playPrevious();
                 break;
-            case R.id.img_next:
+            case R.id.btn_next:
                 playNext();
-                break;
-            case R.id.img_dir:
                 break;
         }
     }
@@ -227,20 +226,12 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
         playNext();
     }
 
-//    public void listPlay(Store store,ArrayList<Uri> playList) {
-//        this.mStore = store;
-//        this.mPlayList = playList;
-//        if (isSamePlaying(mUri)) {
-//            mPositionToPlay = mPlayList.indexOf(mUri);
-//            mHandler.sendEmptyMessage(MSG_NOTIFY_POSITION);
-//            if (!isPlayingMode()) {
-//                play(mUri);
-//            }
-//            return;
-//        }
-//        // default play first one.
-//        play(0);
-//    }
+
+    private void notifyPosition() {
+        if (mPositionListener != null) {
+            mPositionListener.onPositionChanged(mPositionToPlay);
+        }
+    }
 
     public void clearPlayList() {
         mPlayList.clear();
@@ -460,7 +451,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
                     sendMessageDelayed(msg, 1000 - (pos % 1000));
                     break;
                 case MSG_NOTIFY_POSITION:
-                    //notifyPosition();
+                    notifyPosition();
                     break;
                 case MSG_BRAKE_ON:
                     //mBrakeView.setVisibility(View.GONE);
@@ -490,6 +481,10 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
         }
     };
 
+    public void registerPositionListener(MediaPlaylistFragment.OnPositionChangedListener listener) {
+        this.mPositionListener = listener;
+    }
+
     public void showBars(int timeout) {
         Message msg = mHandler.obtainMessage(MSG_FADE_OUT);
         if (timeout != 0) {
@@ -500,8 +495,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
         if (!mShowing) {
             mShowing = true;
             mMediaControlBar.setVisibility(View.VISIBLE);
-            //mActivity.quitFullScreen();
-
+            mActivity.quitFullScreen();
             if (mShowControlBarAnimation == null) {
                 mShowControlBarAnimation = AnimationUtils.loadAnimation(mActivity, R.anim.media_control_bar_up);
             }
@@ -532,9 +526,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
                 });
             }
             mMediaControlBar.startAnimation(mHideControlBarAnimation);
-//            if (isBrakeOn()) {
-//                mActivity.enterFullScreen();
-//            }
+            mActivity.enterFullScreen();
         }
     }
 
@@ -548,11 +540,14 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
     }
 
 
+    public void setCurrentPage(int currentPage) {
+        this.mCurrentPage = currentPage;
+    }
+
+
     private boolean canPlay() {
         Log.d(TAG, "canPlay: " + mApplication.requestAudioFocus(false));
         return mApplication.requestAudioFocus(false);
-//        return true;
-
     }
 
 
@@ -582,7 +577,7 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
             switch (focusChange) {
                 case AudioManager.AUDIOFOCUS_LOSS:
                     Log.d(TAG, "AUDIOFOCUS_LOSS");
-//                    mActivity.finish();
+                    mActivity.finish();
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
@@ -601,10 +596,6 @@ public class MediaPlaybackFragment extends Fragment implements View.OnClickListe
                         resume();
                     }
                     break;
-//                case AudioManager.AUDIOFOCUS_GAIN_GRANTED:
-//                    Log.d(TAG, "AUDIOFOCUS_GAIN_GRANTED");
-//                    play(mUri);
-//                    break;
                 default:
                     break;
             }
