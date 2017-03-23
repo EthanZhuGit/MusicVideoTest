@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">MyMusic</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="durationformatshort" translatable="false">%2$d:%5$02d</string>
+    <string name="durationformatlong" translatable="false">%1$d:%3$02d:%5$02d</string>
+    <string name="default_time" translatable="false">"--:--"</string>
+    <string name="list_position" translatable="false">"%1$02d. "</string>
+    <string name="videoview_error_text_unknown">Sorry, this video cannot be played.</string>
+    <string name="VideoView_error_title">Cannot play video</string>
+    <string name="video_group_info">"%1$s Video Files %2$s"</string>
+    <string name="allVideos">"All Videos"</string>
+    <string name="video_error_auto_next">"(%1$d) Next"</string>
+
+    <!-- unused-->
+    <string name="scanning">Scanning...please wait</string>
+    <string name="loading_video">Loading video...</string>
+    <string name="tab_inand">Hard Disk</string>
+    <string name="storage_error_message">No video!</string>
+    <string name="storage_error_message_detail">The related media file not found!</string>
+    <string name="preview_playback">previewing</string>
+    <string name="videoview_error_text_invalid_progressive_playback">Sorry, this video is not valid for streaming to this device.</string>
+</resources>
