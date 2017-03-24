@@ -39,17 +39,20 @@ public class MusicBrowserActivity extends AppCompatActivity{
     private IMediaPlaybackService service;
     private List<MusicItem> musicItemList;
     private Intent startServiceIntent;
+    private boolean isPlaying=false;
 
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.music_browser_activity);
+        initView();
         startServiceIntent =new Intent(this, MediaPlaybackService.class);
         startService(startServiceIntent);
         bindService(startServiceIntent, serviceConnection, BIND_AUTO_CREATE);
-        initView();
-    }
+        Log.d(TAG, "onCreate: ");
 
+    }
 
 
     private void initView() {
@@ -84,12 +87,15 @@ public class MusicBrowserActivity extends AppCompatActivity{
                 Log.d(TAG, "onServiceConnected: " + "suc");
             }
             mPlayBackFragment.setService(service);
-
+            try {
+                isPlaying=service.isPlaying();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
-
         }
     };
 
@@ -104,6 +110,19 @@ public class MusicBrowserActivity extends AppCompatActivity{
             service.play();
         } catch (RemoteException e) {
             e.printStackTrace();
+        }
+    }
+
+
+
+    public void isPlaying() {
+        if (isPlaying) {
+            mViewPager.setCurrentItem(1);
+            try {
+                service.getLatestInfo();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
     }
 

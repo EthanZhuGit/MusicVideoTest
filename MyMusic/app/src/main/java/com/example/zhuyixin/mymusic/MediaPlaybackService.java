@@ -1,6 +1,7 @@
 package com.example.zhuyixin.mymusic;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.support.annotation.IntDef;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private List<Uri> playList;
     private MediaModel mediaModel;
     private LocalBroadcastManager localBroadcastManager;
+    private NotificationManager manager;
+    private RemoteViews remoteViews;
 
     private PlayBackFragment fragment;
     public MediaPlaybackService() {
@@ -43,6 +47,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public IMediaPlaybackService.Stub mBinder=new IMediaPlaybackService.Stub() {
         @Override
         public void play() throws RemoteException {
+            Log.d(TAG, "play: ");
             playCurrentStore();
         }
 
@@ -102,29 +107,25 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
         Log.d(TAG, "onCreate: ");
     }
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
         Log.d(TAG, "onStartCommand: ");
-        Notification.Builder builder = new Notification.Builder(this.getApplicationContext());
-        Intent intent1 = new Intent(this, MusicBrowserActivity.class);
-        builder.setContentIntent(PendingIntent.getActivity(this, 0, intent1, 0))
-                .setContentTitle("hehe")
-                .setContentText("jejejejej");
-        Notification notification=builder.build();
-        startForeground(110,notification);
+
         return super.onStartCommand(intent, flags, startId);
 
 
     }
 
     private void playCurrentStore() {
+        Log.d(TAG, "playCurrentStore: ");
         getInfo();
-        if (oldPlayingIndex == playingIndex) {
-            mediaPlayer.start();
-            notifyState(ACTION_MUSIC_START);
+        if (oldPlayingIndex==playingIndex){
+
         }else {
             mediaPlayer.reset();
             playIndex(playingIndex);
@@ -142,6 +143,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
+        Log.d(TAG, "onCompletion: ");
         playNext();
         notifyState(ACTION_MUSIC_CHANGED);
     }
@@ -149,8 +151,10 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
 
     private void playNext() {
-        mediaPlayer.reset();
+
         getInfo();
+        Log.d(TAG, "playNext: " + playingIndex);
+        Log.d(TAG, "playNext: " + playList.size());
         int newPosition=Math.abs((playingIndex+1)%playList.size());
         playIndex(newPosition);
         mediaModel.setPlayingIndex(newPosition);
@@ -159,8 +163,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
 
     private void playPrevious() {
-        mediaPlayer.reset();
         getInfo();
+        Log.d(TAG, "playPrevious: " + playingIndex);
+        Log.d(TAG, "playPrevious: " + playList.size());
         int newPosition=Math.abs((playingIndex-1)%playList.size());
         playIndex(newPosition);
         mediaModel.setPlayingIndex(newPosition);
@@ -224,6 +229,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         Intent intent;
         switch (action) {
             case ACTION_MUSIC_START:
+                initNotification();
                 intent = new Intent(ACTION_MUSIC_START);
                 localBroadcastManager.sendBroadcast(intent);
                 break;
@@ -239,4 +245,22 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
+    private void initNotification() {
+        Notification.Builder builder = new Notification.Builder(this);
+        Intent intentStartActivity = new Intent(this, MusicBrowserActivity.class);
+        PendingIntent pendingIntentStartActivity = PendingIntent.getActivity(this, 1, intentStartActivity, PendingIntent.FLAG_UPDATE_CURRENT);
+        remoteViews = new RemoteViews(getPackageName(), R.layout.notification);
+        remoteViews.setTextViewText(R.id.tv_notice_title,"text");
+        remoteViews.setOnClickPendingIntent(R.id.tv_notice_title,pendingIntentStartActivity);
+        builder.setContent(remoteViews).setSmallIcon(R.mipmap.ic_launcher);
+        Notification notification=builder.build();
+        manager.notify(100,notification);
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
+    }
 }

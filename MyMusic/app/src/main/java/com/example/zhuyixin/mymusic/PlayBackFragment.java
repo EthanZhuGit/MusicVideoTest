@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -42,6 +43,8 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
     private LocalBroadcastManager localBroadcastManager;
     private LocalReceiver localReceiver;
     private Store mStore;
+    private MusicBrowserActivity activity;
+    private boolean isPlaying;
 
 
     public PlayBackFragment() {
@@ -56,7 +59,15 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        activity=(MusicBrowserActivity)context;
+        if (activity == null) {
+            Log.d(TAG, "onAttach: " + "nu");
+        }else {
+            Log.d(TAG, "onAttach: " + "not null");
+        }
     }
+
+    
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -96,6 +107,22 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
     }
 
 
+    /**
+     * Called immediately after {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}
+     * has returned, but before any saved state has been restored in to the view.
+     * This gives subclasses a chance to initialize themselves once
+     * they know their view hierarchy has been completely created.  The fragment's
+     * view hierarchy is not however attached to its parent at this point.
+     *
+     * @param view               The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     */
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        activity.isPlaying();
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -132,11 +159,6 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
     public void setService(IMediaPlaybackService service) {
         mService=service;
         Log.d(TAG, "setService: ");
-        try {
-            mService.getLatestInfo();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -180,7 +202,9 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
                     Uri uri = MediaModel.getInstance().getUriList(store).get(playingIndex);
                     Log.d(TAG, "onReceive: " + uri);
                     MusicItem item = MusicUtil.queryMusicFromContentProvider(getContext(), uri);
+
                     if (item!=null) {
+                        Log.d(TAG, "onReceive: " + item.getFileName());
                         if (item.getImage() != null) {
                             imgAlbum.setImageBitmap(item.getImage());
                         }else {
@@ -189,6 +213,8 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
                         tvTitle.setText(TextUtils.isEmpty(item.getTitle()) ? item.getFileName() : item.getTitle());
                         tvArtist.setText(item.getArtist());
                         tvAlbum.setText(item.getAlbum());
+                    }else {
+                        Log.d(TAG, "onReceive: " + "item is null");
                     }
                     break;
                 case ACTION_MUSIC_START:

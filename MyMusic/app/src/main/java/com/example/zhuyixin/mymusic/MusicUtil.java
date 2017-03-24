@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -21,17 +22,16 @@ import java.util.List;
 import java.util.Locale;
 
 public class MusicUtil {
-    private static final String TAG = "MusicUtil";
+    private static final String TAG = "TAGMusicUtil";
 
 
     private static StringBuilder sFormatBuilder = new StringBuilder();
     private static Formatter sFormatter = new Formatter(sFormatBuilder, Locale.getDefault());
     private static final Object[] sTimeArgs = new Object[5];
 
-    public static MusicItem queryMusicFromContentProvider(Context context,Uri fileUri) {
-        Log.d(TAG, "queryMusicFromContentProvider: ");
-        MusicItem item=null;
-        String path=fileUri.getPath();
+    public static MusicItem queryMusicFromContentProvider(Context context, Uri fileUri) {
+        MusicItem item = null;
+        String path = fileUri.getPath();
         Log.d(TAG, "queryMusicFromContentProvider: " + path);
         String fileName = path.substring(path.lastIndexOf("/") + 1);
         Log.d(TAG, "queryMusicFromContentProvider: " + fileName);
@@ -46,16 +46,17 @@ public class MusicUtil {
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.ALBUM
         };
-        String where = MediaStore.Audio.Media.DATA+"=?";
+        String where = MediaStore.Audio.Media.DATA + "=?";
 
-        Uri musicUri;
-        String title;
-        String album;
-        String artist;
+        Uri musicUri = null;
+        String title = "";
+        String album = "";
+        String artist = "";
         Bitmap bitmap = null;
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = resolver.query(uri, searchKey, where, new String[]{path}, null);
         if (cursor != null) {
+            Log.d(TAG, "queryMusicFromContentProvider: " + "cursor is not null");
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
                 musicUri = Uri.withAppendedPath(uri, String.valueOf(id));
@@ -85,22 +86,25 @@ public class MusicUtil {
                     e.printStackTrace();
                 }
 
-                item = new MusicItem(musicUri,title,fileName,fileUri,artist,album,0,bitmap);
             }
+            artist = TextUtils.isEmpty(artist) ? "未知歌手" : artist;
+            album = TextUtils.isEmpty(album) ? "未知专辑" : album;
+            item = new MusicItem(musicUri, title, fileName, fileUri, artist, album, 0, bitmap);
             cursor.close();
-        }else {
+        } else {
+            Log.d(TAG, "queryMusicFromContentProvider: " + "cursor is null");
             musicUri = null;
             title = "";
             artist = "未知歌手";
             album = "未知专辑";
-            item = new MusicItem(musicUri,title,fileName,fileUri,artist,album,0,bitmap);
+            item = new MusicItem(musicUri, title, fileName, fileUri, artist, album, 0, bitmap);
         }
-        return item ;
+        return item;
     }
 
 
     public static boolean isVideoFile(File file) {
-        String name=file.getName().toLowerCase();
+        String name = file.getName().toLowerCase();
         String type = name.substring(name.lastIndexOf(".") + 1);
         return type.equals("mp3") || type.equals("ape") || type.equals("flac");
     }
