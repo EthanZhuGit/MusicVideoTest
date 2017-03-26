@@ -107,7 +107,7 @@ public class MusicBrowserActivity extends AppCompatActivity{
         MediaModel.getInstance().setPlayingStore(store);
         MediaModel.getInstance().setPlayingIndex(index);
         try {
-            service.play();
+            service.play(index);
         } catch (RemoteException e) {
             e.printStackTrace();
         }

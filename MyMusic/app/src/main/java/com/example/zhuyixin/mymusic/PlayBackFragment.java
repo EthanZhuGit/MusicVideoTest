@@ -131,7 +131,7 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
                     if (mService.isPlaying()) {
                         mService.pause();
                     }else {
-                        mService.play();
+                        mService.start();
                     }
 
                 } catch (RemoteException e) {

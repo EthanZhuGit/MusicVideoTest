@@ -1,10 +1,12 @@
 package com.example.zhuyixin.mymusic;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,20 +37,22 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private LocalBroadcastManager localBroadcastManager;
     private NotificationManager manager;
     private RemoteViews remoteViews;
-
     private PlayBackFragment fragment;
+    private String musicFilePath;
+    private AudioManager mAudioManager;
+    private boolean mRequestToken;
     public MediaPlaybackService() {
     }
 
     private Store playingStore;
-    private int playingIndex;
-    private int oldPlayingIndex;
+    private int playingIndex=-1;
+
 
     public IMediaPlaybackService.Stub mBinder=new IMediaPlaybackService.Stub() {
         @Override
-        public void play() throws RemoteException {
+        public void play(int index) throws RemoteException {
             Log.d(TAG, "play: ");
-            playCurrentStore();
+            playCurrentStore(index);
         }
 
         @Override
@@ -60,6 +64,12 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         public void pause() throws RemoteException{
             mediaPlayer.pause();
             notifyState(ACTION_MUSIC_PAUSE);
+        }
+
+        @Override
+        public void start() throws RemoteException{
+            mediaPlayer.start();
+            notifyState(ACTION_MUSIC_START);
         }
 
         @Override
@@ -108,30 +118,16 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         mediaPlayer.setOnCompletionListener(this);
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
+        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         Log.d(TAG, "onCreate: ");
     }
 
     @Override
     public int onStartCommand(Intent intent,int flags, int startId) {
         Log.d(TAG, "onStartCommand: ");
-
         return super.onStartCommand(intent, flags, startId);
-
-
     }
 
-    private void playCurrentStore() {
-        Log.d(TAG, "playCurrentStore: ");
-        getInfo();
-        if (oldPlayingIndex==playingIndex){
-
-        }else {
-            mediaPlayer.reset();
-            playIndex(playingIndex);
-        }
-
-    }
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
@@ -150,12 +146,24 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
 
 
-    private void playNext() {
+    private void playCurrentStore(int index) {
+        if (playingIndex == -1) {
+            getInfo();
+            playIndex(index);
+        } else if (playingIndex != index) {
+            getInfo();
+            mediaPlayer.reset();
+            playIndex(index);
+        }
 
+    }
+
+    private void playNext() {
         getInfo();
         Log.d(TAG, "playNext: " + playingIndex);
         Log.d(TAG, "playNext: " + playList.size());
         int newPosition=Math.abs((playingIndex+1)%playList.size());
+        mediaPlayer.reset();
         playIndex(newPosition);
         mediaModel.setPlayingIndex(newPosition);
     }
@@ -167,15 +175,21 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         Log.d(TAG, "playPrevious: " + playingIndex);
         Log.d(TAG, "playPrevious: " + playList.size());
         int newPosition=Math.abs((playingIndex-1)%playList.size());
+        mediaPlayer.reset();
         playIndex(newPosition);
         mediaModel.setPlayingIndex(newPosition);
     }
 
     private void playIndex(int index) {
+        if (!canPlay()){
+            return;
+        }
         try {
             mediaPlayer.setDataSource(playList.get(index).getPath());
             mediaModel.setPlayingIndex(index);
-            Log.d(TAG, "playIndex: " + "new position "+index);
+            Log.d(TAG, "playIndex: " + "new position "+index+" ");
+            musicFilePath=playList.get(index).getPath();
+            Log.d(TAG, "playIndex: "+musicFilePath);
             mediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
@@ -187,6 +201,18 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private boolean getIsPlaying() {
         return mediaPlayer.isPlaying();
     }
+
+    private boolean canPlay() {
+        return requestAudioFocus();
+    }
+
+    private boolean requestAudioFocus() {
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == mAudioManager
+                .requestAudioFocus(audioFocusChangeListener,
+                        AudioManager.USE_DEFAULT_STREAM_TYPE,
+                        AudioManager.AUDIOFOCUS_GAIN);
+    }
+
 
 
     private Handler mHandler = new Handler(){
@@ -219,7 +245,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
      * 获取存储在MediaModel中的当前播放存储器和音乐在Uri链表中的索引
      */
     private void getInfo() {
-        oldPlayingIndex=playingIndex;
+
         playingStore=mediaModel.getPlayingStore();
         playingIndex=mediaModel.getPlayingIndex();
         playList = mediaModel.getUriList(playingStore);
@@ -234,6 +260,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 localBroadcastManager.sendBroadcast(intent);
                 break;
             case ACTION_MUSIC_PAUSE:
+                manager.cancelAll();
                 intent = new Intent(ACTION_MUSIC_PAUSE);
                 localBroadcastManager.sendBroadcast(intent);
                 break;
@@ -250,17 +277,48 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         Intent intentStartActivity = new Intent(this, MusicBrowserActivity.class);
         PendingIntent pendingIntentStartActivity = PendingIntent.getActivity(this, 1, intentStartActivity, PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews = new RemoteViews(getPackageName(), R.layout.notification);
-        remoteViews.setTextViewText(R.id.tv_notice_title,"text");
-        remoteViews.setOnClickPendingIntent(R.id.tv_notice_title,pendingIntentStartActivity);
+        String title = musicFilePath.substring(musicFilePath.lastIndexOf("/") + 1);
+        remoteViews.setTextViewText(R.id.tv_notice_title,title);
+//        remoteViews.setOnClickPendingIntent(R.id.tv_notice_title,pendingIntentStartActivity);
         builder.setContent(remoteViews).setSmallIcon(R.mipmap.ic_launcher);
+        builder.setContentIntent(pendingIntentStartActivity);
         Notification notification=builder.build();
+        notification.flags=Notification.FLAG_NO_CLEAR;
         manager.notify(100,notification);
     }
+
+
+    private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+        public void onAudioFocusChange(int focusChange) {
+            switch (focusChange) {
+                case AudioManager.AUDIOFOCUS_LOSS:
+                    Log.d(TAG, "AUDIOFOCUS_LOSS");
+                    mediaPlayer.stop();
+                    stopSelf();
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
+                    mediaPlayer.pause();
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                    Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    Log.d(TAG, "AUDIOFOCUS_GAIN");
+                    mediaPlayer.start();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
 
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mAudioManager.abandonAudioFocus(audioFocusChangeListener);
+        manager.cancelAll();
         Log.d(TAG, "onDestroy: ");
     }
 }
