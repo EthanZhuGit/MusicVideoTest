@@ -106,8 +106,9 @@ public class MediaStorageFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "=>onDestroy=");
         mStoreManager.unregisterStoreChangedListener(mStoreChangedListener);
+        mStoreManager.unregisterReceiver();
+        Log.d(TAG, "=>onDestroy=");
     }
 
     @Override
@@ -132,14 +133,14 @@ public class MediaStorageFragment extends Fragment {
                 break;
             case 2:
                 mRadioBtn0.setVisibility(View.VISIBLE);
-//                mRadioBtn0.setChecked(true);
+                mRadioBtn0.setChecked(true);
                 mRadioBtn1.setVisibility(View.VISIBLE);
                 mRadioBtn1.setText(stores.get(1).getDirectory().getPath());
                 mRadioBtn2.setVisibility(View.INVISIBLE);
                     break;
             case 3:
                 mRadioBtn0.setVisibility(View.VISIBLE);
-//                mRadioBtn0.setChecked(true);
+                mRadioBtn0.setChecked(true);
                 mRadioBtn1.setVisibility(View.VISIBLE);
                 mRadioBtn1.setText(stores.get(1).getDirectory().getPath());
                 mRadioBtn2.setVisibility(View.VISIBLE);
@@ -176,14 +177,12 @@ public class MediaStorageFragment extends Fragment {
     private StoreManager.IStoreChangedListener mStoreChangedListener = new StoreManager.IStoreChangedListener() {
 
         public void onStoreChanged(Uri storageVolume, boolean mounted) {
-            if (!mounted) {
-                //ejectStoragePlaying(storageVolume);
-            }
+            Log.d(TAG, "onStoreChanged: ");
             updateStorageState();
         }
     };
 
-
+//
 //    private void ejectStoragePlaying(Uri storageVolume) {
 //        Uri playingUri = mPlayback.getPlayingUri();
 //        if (playingUri.getPath().startsWith(storageVolume.getPath())) {
@@ -237,6 +236,4 @@ public class MediaStorageFragment extends Fragment {
             }
         }
     };
-
-
 }

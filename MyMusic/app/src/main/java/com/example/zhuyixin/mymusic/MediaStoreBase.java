@@ -7,13 +7,11 @@ import java.util.HashMap;
 
 public class MediaStoreBase implements Store{
     private Uri uri;
-    //    private int type;
     private File directory;
     private boolean mounted;
 
     public MediaStoreBase(Uri uri, File directory, boolean mounted) {
         this.uri = uri;
-//        this.type=type;
         this.directory = directory;
         this.mounted = mounted;
     }
@@ -22,9 +20,7 @@ public class MediaStoreBase implements Store{
         return uri;
     }
 
-//    public int getStorageType() {
-//        return type;
-//    }
+
 
     public File getDirectory() {
         return directory;
@@ -33,14 +29,6 @@ public class MediaStoreBase implements Store{
     public boolean mounted() {
         return mounted;
     }
-
-//    public String toString() {
-//        if (getDirectory() == null) {
-//          return String.valueOf(getStorageType());
-//       } else {
-//          return getDirectory().getPath();
-//       }
-//    }
 
 
     @Override

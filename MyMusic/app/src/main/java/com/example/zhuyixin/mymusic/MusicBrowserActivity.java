@@ -37,7 +37,6 @@ public class MusicBrowserActivity extends AppCompatActivity{
     private FragmentPagerAdapter mFragmentPagerAdapter;
     private List<Fragment> pageList = new ArrayList<>();
     private IMediaPlaybackService service;
-    private List<MusicItem> musicItemList;
     private Intent startServiceIntent;
     private boolean isPlaying=false;
 
@@ -47,13 +46,19 @@ public class MusicBrowserActivity extends AppCompatActivity{
 
         setContentView(R.layout.music_browser_activity);
         initView();
-        startServiceIntent =new Intent(this, MediaPlaybackService.class);
-        startService(startServiceIntent);
-        bindService(startServiceIntent, serviceConnection, BIND_AUTO_CREATE);
+
         Log.d(TAG, "onCreate: ");
 
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startServiceIntent =new Intent(this, MediaPlaybackService.class);
+        startService(startServiceIntent);
+        bindService(startServiceIntent, serviceConnection, BIND_AUTO_CREATE);
+    }
 
     private void initView() {
 //        mBrowserFragment = BrowserFragment.newInstance();
@@ -99,7 +104,9 @@ public class MusicBrowserActivity extends AppCompatActivity{
         }
     };
 
-    
+    public void switchToPage(int page) {
+        mViewPager.setCurrentItem(page);
+    }
 
 
     public void switchToPlay(Store store, int index, boolean all) {
@@ -129,13 +136,6 @@ public class MusicBrowserActivity extends AppCompatActivity{
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(TAG, "onStop: ");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy: ");
         unbindService(serviceConnection);
         try {
             if (!service.isPlaying()){
@@ -144,5 +144,14 @@ public class MusicBrowserActivity extends AppCompatActivity{
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+        Log.d(TAG, "onStop: ");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        Log.d(TAG, "onDestroy: ");
+
     }
 }

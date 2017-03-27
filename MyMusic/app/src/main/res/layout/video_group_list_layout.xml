@@ -12,29 +12,7 @@
 	    android:paddingLeft="12dp"
 	    android:paddingRight="13dp"
 	    android:paddingBottom="12dp">
-	    <LinearLayout
-	        android:id="@+id/all_Videos"
-	        android:layout_width="fill_parent"
-	    	android:layout_height="90dip"
-	    	android:minHeight="90dip"
-	    	android:maxHeight="90dip"
-	    	android:orientation="horizontal"
-	    	android:gravity="center_vertical"
-	    	android:clickable="true"
-	        >
-	    <ImageView
-	        android:layout_height="wrap_content"
-	        android:layout_width="wrap_content"
-	        android:paddingLeft="4dp"
-	        />
-		<TextView
-		    android:layout_height="wrap_content"
-	        android:layout_width="wrap_content"
-		    android:textSize="32sp"
-		    android:layout_marginLeft="8dp"
-		    android:text="All Videos"
-		    />
-		</LinearLayout>
+
 	    
 		<ListView android:id="@+id/main_list"
 			android:layout_height="wrap_content"

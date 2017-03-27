@@ -32,8 +32,6 @@ public class MediaFragment extends Fragment {
     private ListView mListView;
     private View mView;
 
-    private LinearLayout mAllVideos;
-
     private MusicBrowserActivity musicBrowserActivity;
 
     private ArrayList<Uri> list = null;
@@ -93,8 +91,6 @@ public class MediaFragment extends Fragment {
             mArrayAdapter=new MusicAdapter(getContext(),R.layout.music_item,list);
             mListView.setAdapter(mArrayAdapter);
         }
-        mAllVideos = (LinearLayout) mView.findViewById(R.id.all_Videos);
-        mAllVideos.setOnClickListener(mAllViewClick);
         list = MediaModel.getInstance().startAllVideoLoader(mStore, mListener);
         if (list == null) {
             mView.findViewById(R.id.all_list).setVisibility(View.GONE);
@@ -149,21 +145,6 @@ public class MediaFragment extends Fragment {
             MediaModel.getInstance().setPlayingStore(mStore);
             Log.d(TAG, "onItemClick: " +arg2);
             activity.switchToPlay(mStore, arg2, false);
-        }
-    };
-
-    private View.OnClickListener mAllViewClick = new View.OnClickListener() {
-
-        @Override
-        public void onClick(View view) {
-//            ArrayList<Uri> fileUri = new ArrayList<>();
-//            for (int i = 0; i < mArrayAdapter.getDatalist().size(); i++) {
-//                for (int j = 0; j < mArrayAdapter.getDatalist().get(i).mVideoList.size(); j++) {
-//                    fileUri.add(mArrayAdapter.getDatalist().get(i).mVideoList.get(j));
-//                }
-//            }
-//            MusicBrowserActivity activity = (MusicBrowserActivity) getActivity();
-//            activity.switchToPlay(mStore, fileUri, true);
         }
     };
 

@@ -28,6 +28,9 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
     private final String ACTION_MUSIC_START = "action_music_start";
     private final String ACTION_MUSIC_PAUSE = "action_music_pause";
     private final String ACTION_MUSIC_CHANGED = "action_music_changed";
+    private final String ACTION_MUSIC_PLAYINGSTORE_EJECT = "action_music_eject";
+
+
 
     private Button btnPrevious;
     private Button btnPlay;
@@ -101,6 +104,7 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
         intentFilter.addAction(ACTION_MUSIC_CHANGED);
         intentFilter.addAction(ACTION_MUSIC_PAUSE);
         intentFilter.addAction(ACTION_MUSIC_START);
+        intentFilter.addAction(ACTION_MUSIC_PLAYINGSTORE_EJECT);
         localReceiver=new LocalReceiver();
         localBroadcastManager.registerReceiver(localReceiver,intentFilter);
         return view;
@@ -173,11 +177,9 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
         super.onDestroy();
         Log.d(TAG, "onDestroy: ");
         localBroadcastManager.unregisterReceiver(localReceiver);
+
     }
     
-    
-
-
 
     class LocalReceiver extends BroadcastReceiver{
         @Override
@@ -222,6 +224,10 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
                     break;
                 case ACTION_MUSIC_PAUSE:
                     btnPlay.setText("play");
+                    break;
+                case ACTION_MUSIC_PLAYINGSTORE_EJECT:
+                    Log.d(TAG, "onReceive: " + "eject");
+                    activity.switchToPage(0);
                     break;
             }
 

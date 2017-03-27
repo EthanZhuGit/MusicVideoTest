@@ -5,7 +5,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -19,6 +22,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private final String ACTION_MUSIC_CHANGED = "action_music_changed";
     private final String ACTION_MUSIC_START = "action_music_start";
     private final String ACTION_MUSIC_PAUSE = "action_music_pause";
+    private final String ACTION_MUSIC_PLAYINGSTORE_EJECT = "action_music_eject";
     private MediaPlayer mediaPlayer;
     private StoreManager mStoreManager;
     private List<Uri> playList;
@@ -37,10 +42,11 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private LocalBroadcastManager localBroadcastManager;
     private NotificationManager manager;
     private RemoteViews remoteViews;
-    private PlayBackFragment fragment;
     private String musicFilePath;
     private AudioManager mAudioManager;
-    private boolean mRequestToken;
+    private EjectReceiver receiver;
+    private boolean isPlayingMode=true;
+
     public MediaPlaybackService() {
     }
 
@@ -51,7 +57,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public IMediaPlaybackService.Stub mBinder=new IMediaPlaybackService.Stub() {
         @Override
         public void play(int index) throws RemoteException {
-            Log.d(TAG, "play: ");
             playCurrentStore(index);
         }
 
@@ -112,13 +117,18 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void onCreate() {
         super.onCreate();
         mediaModel=MediaModel.getInstance();
-        mStoreManager = StoreManager.getInstance(this);
+//        mStoreManager = StoreManager.getInstance(this);
         mediaPlayer=new MediaPlayer();
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        receiver=new EjectReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_MEDIA_EJECT);
+        intentFilter.addDataScheme("file");
+        registerReceiver(receiver, intentFilter);
         Log.d(TAG, "onCreate: ");
     }
 
@@ -140,13 +150,18 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
         Log.d(TAG, "onCompletion: ");
-        playNext();
-        notifyState(ACTION_MUSIC_CHANGED);
+        if (isPlayingMode) {
+            playNext();
+            notifyState(ACTION_MUSIC_CHANGED);
+        }
     }
 
 
 
     private void playCurrentStore(int index) {
+        if (mediaPlayer == null) {
+            mediaPlayer=new MediaPlayer();
+        }
         if (playingIndex == -1) {
             getInfo();
             playIndex(index);
@@ -160,20 +175,18 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     private void playNext() {
         getInfo();
-        Log.d(TAG, "playNext: " + playingIndex);
-        Log.d(TAG, "playNext: " + playList.size());
-        int newPosition=Math.abs((playingIndex+1)%playList.size());
-        mediaPlayer.reset();
-        playIndex(newPosition);
-        mediaModel.setPlayingIndex(newPosition);
+        if (playList!=null) {
+            int newPosition = Math.abs((playingIndex + 1) % playList.size());
+            mediaPlayer.reset();
+            playIndex(newPosition);
+            mediaModel.setPlayingIndex(newPosition);
+        }
     }
 
 
 
     private void playPrevious() {
         getInfo();
-        Log.d(TAG, "playPrevious: " + playingIndex);
-        Log.d(TAG, "playPrevious: " + playList.size());
         int newPosition=Math.abs((playingIndex-1)%playList.size());
         mediaPlayer.reset();
         playIndex(newPosition);
@@ -189,7 +202,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             mediaModel.setPlayingIndex(index);
             Log.d(TAG, "playIndex: " + "new position "+index+" ");
             musicFilePath=playList.get(index).getPath();
-            Log.d(TAG, "playIndex: "+musicFilePath);
             mediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
@@ -267,7 +279,12 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             case ACTION_MUSIC_CHANGED:
                 intent = new Intent(ACTION_MUSIC_CHANGED);
                 localBroadcastManager.sendBroadcast(intent);
-                Log.d(TAG, "notifyState: " + "change");
+                break;
+            case ACTION_MUSIC_PLAYINGSTORE_EJECT:
+                manager.cancelAll();
+                intent = new Intent(ACTION_MUSIC_PLAYINGSTORE_EJECT);
+                localBroadcastManager.sendBroadcast(intent);
+                Log.d(TAG, "notifyState: " + "eject");
                 break;
         }
     }
@@ -314,11 +331,36 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
 
 
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         mAudioManager.abandonAudioFocus(audioFocusChangeListener);
         manager.cancelAll();
+        mediaPlayer.release();
         Log.d(TAG, "onDestroy: ");
+    }
+
+    public class EjectReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d(TAG, "onReceive: "+intent.getAction());
+            boolean eject = Intent.ACTION_MEDIA_EJECT.equals(intent.getAction());
+            if (eject) {
+                Uri storageVolume = intent.getData();
+                if (playingStore!=null) {
+                    Log.d(TAG, "onReceive: " + intent.getData() + " " + playingStore.getUri());
+                    if (storageVolume.equals(playingStore.getUri())) {
+                        mHandler.removeMessages(MSG_UPDATE_PROGRESS);
+                        mediaPlayer.reset();
+                        mediaPlayer.release();
+                        isPlayingMode = false;
+                        notifyState(ACTION_MUSIC_PLAYINGSTORE_EJECT);
+                        Log.d(TAG, "onReceive: " + "存储器拔出");
+                    }
+                }
+            }
+        }
     }
 }

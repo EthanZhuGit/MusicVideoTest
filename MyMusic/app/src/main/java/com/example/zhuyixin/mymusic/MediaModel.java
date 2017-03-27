@@ -2,6 +2,7 @@ package com.example.zhuyixin.mymusic;
 
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
@@ -71,9 +72,10 @@ public class MediaModel {
     }
 
     public ArrayList<Uri> startAllVideoLoader(Store store, OnAllVideoLoadListener listener) {
+        Log.d(TAG, "startAllVideoLoader: ");
         ArrayList<Uri> list = mData.get(store.getDirectory().getPath());
         if (list != null) {
-            // get from cache.
+//             get from cache.
             return list;
         } else {
             mLoadTask = new LoadTask(store, listener);
@@ -92,11 +94,12 @@ public class MediaModel {
 
     /**
      * 当存储器插拔后更新数据
-     * @param store 存储器对象，若为插入设备，则调用loadTask读取，若为null，
+     * @param store
      * @param storageVolume
      * @param mounted
      */
     public void updateData(Store store, Uri storageVolume, boolean mounted) {
+        Log.d(TAG, "updateData: ");
         if (store != null) {
             if (mLoadTask != null && mLoadTask.mStore.equals(store)) {
                 mLoadTask.cancel(true);
@@ -213,7 +216,12 @@ public class MediaModel {
 
         private FileFilter mDirFileFilter = new FileFilter() {
             public boolean accept(File file) {
-                return true;
+                String externalStoragePath=Environment.getExternalStorageDirectory().getPath();
+                if (externalStoragePath.equals(mStore.getDirectory().getPath()) && file.getPath().equals(externalStoragePath + "/sdcard")) {
+                    return false;
+                }else {
+                    return true;
+                }
             }
         };
 
