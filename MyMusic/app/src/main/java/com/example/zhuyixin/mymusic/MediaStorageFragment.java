@@ -20,7 +20,7 @@ public class MediaStorageFragment extends Fragment {
     private StoreManager mStoreManager;
     private Store mCurrentStore;
 
-    private MediaFragment mMediaFragmentHD, mMediaFragmentUSB, mMediaFragmentSD;
+    private MediaFragment mMediaFragment0, mMediaFragment1, mMediaFragment2;
     private RadioButton mRadioBtn0, mRadioBtn1, mRadioBtn2;
     private RadioGroup mRadioGroup;
 
@@ -149,31 +149,8 @@ public class MediaStorageFragment extends Fragment {
         }
     }
 
-    /**
-     * 将store的按键设为true
-     *
-     * @param
-     */
-    public void setCurrentMediaStore(Store store) {
-        mCurrentStore = store;
-        int i = mStoreManager.getStoreList().indexOf(store);
-        switch (i) {
-            case 0:
-                mRadioBtn0.setChecked(true);
-                break;
-            case 1:
-                mRadioBtn1.setChecked(true);
-                break;
-            case 2:
-                mRadioBtn2.setChecked(true);
-                break;
-        }
-    }
 
 
-    /**
-     * 实现onStoreChanged(),
-     */
     private StoreManager.IStoreChangedListener mStoreChangedListener = new StoreManager.IStoreChangedListener() {
 
         public void onStoreChanged(Uri storageVolume, boolean mounted) {
@@ -182,16 +159,6 @@ public class MediaStorageFragment extends Fragment {
         }
     };
 
-//
-//    private void ejectStoragePlaying(Uri storageVolume) {
-//        Uri playingUri = mPlayback.getPlayingUri();
-//        if (playingUri.getPath().startsWith(storageVolume.getPath())) {
-//            Log.d(TAG, "=stop current playback.");
-//            VideoTabActivity activity = (VideoTabActivity) getActivity();
-//            activity.switchToPage(0);
-//            mPlayback.stop();
-//        }
-//    }
 
 
     private RadioGroup.OnCheckedChangeListener OnCheckedChangeListener = new RadioGroup.OnCheckedChangeListener() {
@@ -201,33 +168,30 @@ public class MediaStorageFragment extends Fragment {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
             switch (radioButtonId) {
                 case R.id.storage_0:
-                    Log.d(TAG, "===>>HD ");
                     mCurrentStore = mStoreManager.getStoreList().get(0);
                     Log.d(TAG, "onCheckedChanged: " + mCurrentStore.getUri().toString());
-                    if (mMediaFragmentHD == null) {
-                        mMediaFragmentHD = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
+                    if (mMediaFragment0 == null) {
+                        mMediaFragment0 = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
                     }
 
-                    transaction.replace(R.id.container, mMediaFragmentHD);
+                    transaction.replace(R.id.container, mMediaFragment0);
                     transaction.commit();
                     break;
                 case R.id.storage_1:
-                    Log.d(TAG, "===>>USB ");
                     mCurrentStore = mStoreManager.getStoreList().get(1);
-                    if (mMediaFragmentUSB == null) {
-                        mMediaFragmentUSB = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
+                    if (mMediaFragment1 == null) {
+                        mMediaFragment1 = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
                     }
 
-                    transaction.replace(R.id.container, mMediaFragmentUSB);
+                    transaction.replace(R.id.container, mMediaFragment1);
                     transaction.commit();
                     break;
                 case R.id.storage_2:
-                    Log.d(TAG, "===>>SD ");
                     mCurrentStore = mStoreManager.getStoreList().get(2);
-                    if (mMediaFragmentSD == null) {
-                        mMediaFragmentSD = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
+                    if (mMediaFragment2 == null) {
+                        mMediaFragment2 = MediaFragment.newInstance(mCurrentStore.getUri().toString(), mCurrentStore.mounted());
                     }
-                    transaction.replace(R.id.container, mMediaFragmentSD);
+                    transaction.replace(R.id.container, mMediaFragment2);
                     transaction.commit();
                     break;
                 default:

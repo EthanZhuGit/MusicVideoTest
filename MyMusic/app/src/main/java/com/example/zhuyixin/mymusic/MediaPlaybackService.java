@@ -16,15 +16,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.support.annotation.IntDef;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.RemoteViews;
-
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
@@ -36,7 +31,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     private final String ACTION_MUSIC_PAUSE = "action_music_pause";
     private final String ACTION_MUSIC_PLAYINGSTORE_EJECT = "action_music_eject";
     private MediaPlayer mediaPlayer;
-    private StoreManager mStoreManager;
     private List<Uri> playList;
     private MediaModel mediaModel;
     private LocalBroadcastManager localBroadcastManager;
@@ -67,13 +61,13 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
         @Override
         public void pause() throws RemoteException{
-            mediaPlayer.pause();
+            pausePlay();
             notifyState(ACTION_MUSIC_PAUSE);
         }
 
         @Override
         public void start() throws RemoteException{
-            mediaPlayer.start();
+            startPlay();
             notifyState(ACTION_MUSIC_START);
         }
 
@@ -117,7 +111,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void onCreate() {
         super.onCreate();
         mediaModel=MediaModel.getInstance();
-//        mStoreManager = StoreManager.getInstance(this);
         mediaPlayer=new MediaPlayer();
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
@@ -162,15 +155,17 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if (mediaPlayer == null) {
             mediaPlayer=new MediaPlayer();
         }
-        if (playingIndex == -1) {
-            getInfo();
-            playIndex(index);
-        } else if (playingIndex != index) {
-            getInfo();
-            mediaPlayer.reset();
-            playIndex(index);
-        }
-
+//        if (playingIndex == -1) {
+//            getInfo();
+//            playIndex(index);
+//        } else if (playingIndex != index) {
+//            getInfo();
+//            mediaPlayer.reset();
+//            playIndex(index);
+//        }
+        getInfo();
+        mediaPlayer.reset();
+        playIndex(index);
     }
 
     private void playNext() {
@@ -206,8 +201,23 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         } catch (IOException e) {
             e.printStackTrace();
         }
-        mediaPlayer.start();
+//        mediaPlayer.start();
+        startPlay();
         notifyState(ACTION_MUSIC_START);
+    }
+
+    private void pausePlay() {
+        mediaPlayer.pause();
+        if (mHandler.hasMessages(MSG_UPDATE_PROGRESS)) {
+            mHandler.removeMessages(MSG_UPDATE_PROGRESS);
+        }
+    }
+
+    private void startPlay() {
+        mediaPlayer.start();
+        if (!mHandler.hasMessages(MSG_UPDATE_PROGRESS)) {
+            mHandler.sendEmptyMessage(MSG_UPDATE_PROGRESS);
+        }
     }
 
     private boolean getIsPlaying() {
@@ -284,7 +294,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 manager.cancelAll();
                 intent = new Intent(ACTION_MUSIC_PLAYINGSTORE_EJECT);
                 localBroadcastManager.sendBroadcast(intent);
-                Log.d(TAG, "notifyState: " + "eject");
                 break;
         }
     }
@@ -311,17 +320,21 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                 case AudioManager.AUDIOFOCUS_LOSS:
                     Log.d(TAG, "AUDIOFOCUS_LOSS");
                     mediaPlayer.stop();
-                    stopSelf();
+                    if (mHandler.hasMessages(MSG_UPDATE_PROGRESS)) {
+                        mHandler.removeMessages(MSG_UPDATE_PROGRESS);
+                    }
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
-                    mediaPlayer.pause();
+//                    mediaPlayer.pause();
+                    pausePlay();
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                     Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
                 case AudioManager.AUDIOFOCUS_GAIN:
                     Log.d(TAG, "AUDIOFOCUS_GAIN");
-                    mediaPlayer.start();
+//                    mediaPlayer.start();
+                    startPlay();
                     break;
                 default:
                     break;
@@ -336,6 +349,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void onDestroy() {
         super.onDestroy();
         mAudioManager.abandonAudioFocus(audioFocusChangeListener);
+        unregisterReceiver(receiver);
         manager.cancelAll();
         mediaPlayer.release();
         Log.d(TAG, "onDestroy: ");
@@ -344,8 +358,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     public class EjectReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-
-            Log.d(TAG, "onReceive: "+intent.getAction());
             boolean eject = Intent.ACTION_MEDIA_EJECT.equals(intent.getAction());
             if (eject) {
                 Uri storageVolume = intent.getData();
@@ -354,10 +366,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
                     if (storageVolume.equals(playingStore.getUri())) {
                         mHandler.removeMessages(MSG_UPDATE_PROGRESS);
                         mediaPlayer.reset();
-                        mediaPlayer.release();
                         isPlayingMode = false;
                         notifyState(ACTION_MUSIC_PLAYINGSTORE_EJECT);
-                        Log.d(TAG, "onReceive: " + "存储器拔出");
+                        Log.d(TAG, "onReceive: " + "存储器拔出"+" "+intent.getAction());
                     }
                 }
             }

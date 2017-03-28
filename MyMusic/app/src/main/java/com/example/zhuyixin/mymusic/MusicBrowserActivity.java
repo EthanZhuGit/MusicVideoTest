@@ -86,11 +86,6 @@ public class MusicBrowserActivity extends AppCompatActivity{
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             service = IMediaPlaybackService.Stub.asInterface(iBinder);
-            if (service == null) {
-                Log.d(TAG, "onServiceConnected: " + "fail");
-            }else {
-                Log.d(TAG, "onServiceConnected: " + "suc");
-            }
             mPlayBackFragment.setService(service);
             try {
                 isPlaying=service.isPlaying();
@@ -150,7 +145,6 @@ public class MusicBrowserActivity extends AppCompatActivity{
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         Log.d(TAG, "onDestroy: ");
 
     }

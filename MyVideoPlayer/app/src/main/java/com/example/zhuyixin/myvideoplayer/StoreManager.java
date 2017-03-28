@@ -54,8 +54,6 @@ public class StoreManager {
      */
     private StoreManager(Context context) {
         mContext = context;
-//        mStoreList.add(new MediaStoreBase(Uri.fromFile(Environment.getExternalStorageDirectory()),
-//                Environment.getExternalStorageDirectory(), Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)));
         mPref = context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
         mStoreList.addAll(listAvailableStorage(context));
         IntentFilter intentFilter = new IntentFilter();

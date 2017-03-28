@@ -140,12 +140,14 @@ public class MediaStorageFragment extends Fragment {
                 break;
             case 2:
                 mRadioBtn0.setVisibility(View.VISIBLE);
+                mRadioBtn0.setChecked(true);
                 mRadioBtn1.setVisibility(View.VISIBLE);
                 mRadioBtn1.setText(stores.get(1).getDirectory().getPath());
                 mRadioBtn2.setVisibility(View.INVISIBLE);
                 break;
             case 3:
                 mRadioBtn0.setVisibility(View.VISIBLE);
+                mRadioBtn0.setChecked(true);
                 mRadioBtn1.setVisibility(View.VISIBLE);
                 mRadioBtn1.setText(stores.get(1).getDirectory().getPath());
                 mRadioBtn2.setVisibility(View.VISIBLE);

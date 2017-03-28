@@ -143,7 +143,7 @@ public class MediaFragment extends Fragment {
             MusicBrowserActivity activity = (MusicBrowserActivity) getActivity();
             MediaModel.getInstance().setPlayingIndex(arg2);
             MediaModel.getInstance().setPlayingStore(mStore);
-            Log.d(TAG, "onItemClick: " +arg2);
+            Log.d(TAG, "onItemClick: " +arg2+" "+mStore.getUri().toString());
             activity.switchToPlay(mStore, arg2, false);
         }
     };

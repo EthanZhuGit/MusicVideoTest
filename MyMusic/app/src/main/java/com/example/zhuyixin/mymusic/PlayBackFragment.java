@@ -63,11 +63,6 @@ public class PlayBackFragment extends Fragment implements View.OnClickListener{
     public void onAttach(Context context) {
         super.onAttach(context);
         activity=(MusicBrowserActivity)context;
-        if (activity == null) {
-            Log.d(TAG, "onAttach: " + "nu");
-        }else {
-            Log.d(TAG, "onAttach: " + "not null");
-        }
     }
 
     

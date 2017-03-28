@@ -19,14 +19,7 @@ public class StoreManager {
     private static final String TAG ="TAG "+  StoreManager.class.getSimpleName();
     
     private static StoreManager sStoreManager = null;
-    
-    public static final String STORE_NAME           = "VIDEO";
-    public static final String KEY_STORE_TYPE       = "KEY_STORE_TYPE";
-    public static final String KEY_SCREEN_MODE      = "KEY_SCREEN_MODE";
-    public static final String KEY_CUR_URI          = "KEY_CUR_URI";
-    public static final String KEY_DUR_POSITION     = "KEY_DUR_POSITION";
-    public static final String KEY_ALL_VIDEO        = "KEY_ALL_VIDEO";
-    
+
     private Context mContext;
     private SharedPreferences mPref;
     private ArrayList<Store> mStoreList = new ArrayList<Store>();
@@ -47,9 +40,6 @@ public class StoreManager {
      */
     private StoreManager(Context context) {
         mContext = context;
-//        mStoreList.add(new MediaStoreBase(Uri.fromFile(Environment.getExternalStorageDirectory()),
-//                Environment.getExternalStorageDirectory(), Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)));
-
         mStoreList.addAll(listAvailableStorage(context));
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
@@ -59,7 +49,7 @@ public class StoreManager {
     }
 
     /**
-     * 利用反射获取启动前已经挂载的存储设备
+     * 用反射获取启动前已经挂载的存储设备
      * @param context
      * @return
      */
@@ -162,15 +152,7 @@ public class StoreManager {
     public ArrayList<Store> getStoreList() {
         return mStoreList;
     }
-    
-//    public Store getMediaStore(int mediaType) {
-//        for(Store store : mStoreList) {
-//            if (store.getStorageType() == mediaType) {
-//                return store;
-//            }
-//        }
-//        return null;
-//    }
+
     
     public Store getMediaStore(Uri fileUri) {
         String filePath = fileUri.getPath();

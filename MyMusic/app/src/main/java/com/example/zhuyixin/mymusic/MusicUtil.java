@@ -32,11 +32,8 @@ public class MusicUtil {
     public static MusicItem queryMusicFromContentProvider(Context context, Uri fileUri) {
         MusicItem item = null;
         String path = fileUri.getPath();
-        Log.d(TAG, "queryMusicFromContentProvider: " + path);
         String fileName = path.substring(path.lastIndexOf("/") + 1);
-        Log.d(TAG, "queryMusicFromContentProvider: " + fileName);
         Uri uri = MediaStore.Audio.Media.getContentUriForPath(path);
-        Log.d(TAG, "queryMusicFromContentProvider: " + uri);
         String[] searchKey = new String[]{
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.TITLE,
@@ -56,7 +53,6 @@ public class MusicUtil {
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = resolver.query(uri, searchKey, where, new String[]{path}, null);
         if (cursor != null) {
-            Log.d(TAG, "queryMusicFromContentProvider: " + "cursor is not null");
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
                 musicUri = Uri.withAppendedPath(uri, String.valueOf(id));
@@ -68,16 +64,6 @@ public class MusicUtil {
 
                 album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
                 artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
-
-                Log.d(TAG, "queryMusicFromContentProvider: " + id);
-                Log.d(TAG, "queryMusicFromContentProvider: " + musicUri.toString());
-                Log.d(TAG, "queryMusicFromContentProvider: " + title);
-                Log.d(TAG, "queryMusicFromContentProvider: " + albumId);
-                Log.d(TAG, "queryMusicFromContentProvider: " + albumUri);
-                Log.d(TAG, "queryMusicFromContentProvider: " + artist);
-                Log.d(TAG, "queryMusicFromContentProvider: " + album);
-
-
                 try {
                     InputStream in = resolver.openInputStream(albumUri);
                     BitmapFactory.Options options = new BitmapFactory.Options();
@@ -92,7 +78,6 @@ public class MusicUtil {
             item = new MusicItem(musicUri, title, fileName, fileUri, artist, album, 0, bitmap);
             cursor.close();
         } else {
-            Log.d(TAG, "queryMusicFromContentProvider: " + "cursor is null");
             musicUri = null;
             title = "";
             artist = "未知歌手";
@@ -103,7 +88,7 @@ public class MusicUtil {
     }
 
 
-    public static boolean isVideoFile(File file) {
+    public static boolean isMusicFile(File file) {
         String name = file.getName().toLowerCase();
         String type = name.substring(name.lastIndexOf(".") + 1);
         return type.equals("mp3") || type.equals("ape") || type.equals("flac");

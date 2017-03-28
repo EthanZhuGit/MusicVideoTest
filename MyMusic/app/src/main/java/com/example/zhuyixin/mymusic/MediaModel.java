@@ -4,16 +4,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class MediaModel {
@@ -39,6 +36,7 @@ public class MediaModel {
 
     public void setPlayingStore(Store store) {
         this.playingStore=store;
+        Log.d(TAG, "setPlayingStore: " + playingStore.getUri().toString());
     }
 
     public int getPlayingIndex() {
@@ -82,14 +80,6 @@ public class MediaModel {
             mLoadTask.execute(store.getDirectory());
             return null;
         }
-    }
-
-
-    public void resetData(Store store) {
-        if (mLoadTask != null && mLoadTask.mStore.equals(store)) {
-            mLoadTask.cancel(true);
-        }
-        mData.remove(store.getDirectory().getPath());
     }
 
     /**
@@ -174,7 +164,7 @@ public class MediaModel {
 
         @Override
         protected void onPostExecute(ArrayList<Uri> result) {
-            Log.d(TAG, "onPostExecute"+result.size());
+            Log.d(TAG, "onPostExecute "+result.size());
             if (!isCancelled()) {
                 mData.put(mStore.getDirectory().getPath(), result);
                 if (mLoadListener != null) {
@@ -197,7 +187,7 @@ public class MediaModel {
          */
         private void iteratorFile(File file, ArrayList<Uri> entries) {
             if (file.isDirectory()) {
-                File[] fileList = file.listFiles(mVideoFileFilter);
+                File[] fileList = file.listFiles(mMusicFileFilter);
                 if (fileList != null && fileList.length > 0) {
                     for (File f: fileList) {
                         Uri fileUri = Uri.fromFile(f);
@@ -217,7 +207,7 @@ public class MediaModel {
         private FileFilter mDirFileFilter = new FileFilter() {
             public boolean accept(File file) {
                 String externalStoragePath=Environment.getExternalStorageDirectory().getPath();
-                if (externalStoragePath.equals(mStore.getDirectory().getPath()) && file.getPath().equals(externalStoragePath + "/sdcard")) {
+                if (!mScanExclude.contains(file.getPath())&&externalStoragePath.equals(mStore.getDirectory().getPath()) && file.getPath().equals(externalStoragePath + "/sdcard")) {
                     return false;
                 }else {
                     return true;
@@ -227,9 +217,9 @@ public class MediaModel {
 
     }
 
-    private FileFilter mVideoFileFilter = new FileFilter() {
+    private FileFilter mMusicFileFilter = new FileFilter() {
         public boolean accept(File file) {
-            return file != null && MusicUtil.isVideoFile(file);
+            return file != null && MusicUtil.isMusicFile(file);
         }
     };
 
